@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Medication {
+  id                String   @id @default(uuid())
+  name              String
+  category          String
+  doseMin           Float
+  doseMax           Float
+  concentration     Float
+  concentrationUnit String   @default("mg/ml")
+  route             String
+  notes             String?
+  isDefault         Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
