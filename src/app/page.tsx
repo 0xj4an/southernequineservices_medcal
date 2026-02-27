@@ -22,6 +22,17 @@ export default async function Home() {
           &copy; {new Date().getFullYear()} Southern Equine Service. All rights
           reserved.
         </p>
+        <p className="mt-2 text-xs text-gray-400">
+          Made by{" "}
+          <a
+            href="https://github.com/0xj4an"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#c8a45a] hover:underline"
+          >
+            0xj4an
+          </a>
+        </p>
       </footer>
     </div>
   );

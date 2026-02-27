@@ -99,7 +99,7 @@ export default function Calculator({ medications }: CalculatorProps) {
           htmlFor="weight"
           className="mb-2 block text-sm font-semibold text-[#1a2332] uppercase tracking-wide"
         >
-          Peso del Caballo
+          Horse Weight
         </label>
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="relative flex-1 max-w-[10rem] sm:max-w-xs">
@@ -161,10 +161,10 @@ export default function Calculator({ medications }: CalculatorProps) {
             <div>
               <div className="flex flex-col gap-1 mb-2 sm:flex-row sm:items-center sm:justify-between">
                 <label className="text-sm font-semibold text-[#1a2332] uppercase tracking-wide">
-                  Dosis
+                  Dose
                 </label>
                 <span className="text-xs text-gray-500 sm:text-sm">
-                  Rango: {selectedMed.doseMin} — {selectedMed.doseMax} mg/kg
+                  Range: {selectedMed.doseMin} — {selectedMed.doseMax} mg/kg
                 </span>
               </div>
 
@@ -174,7 +174,7 @@ export default function Calculator({ medications }: CalculatorProps) {
                     {selectedMed.doseMin}
                   </span>
                   <span className="text-sm text-gray-500 ml-1">mg/kg</span>
-                  <span className="text-xs text-gray-400 ml-2">(dosis fija)</span>
+                  <span className="text-xs text-gray-400 ml-2">(fixed dose)</span>
                 </div>
               ) : (
                 <>
@@ -238,17 +238,17 @@ export default function Calculator({ medications }: CalculatorProps) {
             {/* Calculation Breakdown */}
             <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
               <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
-                Calculo
+                Calculation
               </div>
               <div className="grid grid-cols-3 gap-2 text-center mb-4 sm:gap-4">
                 <div>
-                  <div className="text-xs text-gray-500">Dosis</div>
+                  <div className="text-xs text-gray-500">Dose</div>
                   <div className="text-sm font-semibold text-[#1a2332] sm:text-lg">
                     {selectedDose} <span className="text-xs text-gray-400">mg/kg</span>
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-500">Peso</div>
+                  <div className="text-xs text-gray-500">Weight</div>
                   <div className="text-sm font-semibold text-[#1a2332] sm:text-lg">
                     {weightKg} <span className="text-xs text-gray-400">kg</span>
                   </div>
@@ -275,7 +275,7 @@ export default function Calculator({ medications }: CalculatorProps) {
             {/* Final Result */}
             <div className="bg-[#c8a45a] rounded-xl px-4 py-4 text-center sm:px-6 sm:py-5">
               <div className="text-xs font-semibold text-white/70 uppercase tracking-widest mb-1">
-                Administrar
+                Administer
               </div>
               <div className="text-3xl font-black text-white sm:text-5xl">
                 {formatVolume(volume, selectedMed.concentrationUnit)}{" "}
@@ -289,7 +289,7 @@ export default function Calculator({ medications }: CalculatorProps) {
             {/* Notes */}
             {selectedMed.notes && (
               <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900 border border-amber-200">
-                <span className="font-semibold">Nota:</span> {selectedMed.notes}
+                <span className="font-semibold">Note:</span> {selectedMed.notes}
               </div>
             )}
           </div>
