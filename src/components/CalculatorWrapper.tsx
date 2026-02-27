@@ -22,9 +22,9 @@ interface CriMedication {
   category: string;
   loadingDoseMin: number;
   loadingDoseMax: number;
-  rateMin: number;
-  rateMax: number;
-  rateUnit: string;
+  rateMin: number | null;
+  rateMax: number | null;
+  rateUnit: string | null;
   concentration: number;
   concentrationUnit: string;
   notes: string | null;
