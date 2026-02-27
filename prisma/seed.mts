@@ -1,15 +1,14 @@
+import 'dotenv/config'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
+import { PrismaPg } from '@prisma/adapter-pg'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const clientPath = resolve(__dirname, '../src/generated/prisma/client.ts')
 const mod = await import(clientPath)
 const PrismaClient = mod.PrismaClient
 
-const adapter = new PrismaBetterSqlite3({
-  url: 'file:./dev.db',
-})
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
 
 const medications = [

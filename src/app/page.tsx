@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import Header from "@/components/Header";
 import Calculator from "@/components/Calculator";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const medications = await prisma.medication.findMany({
     orderBy: [{ category: "asc" }, { name: "asc" }],

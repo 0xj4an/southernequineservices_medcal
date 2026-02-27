@@ -92,17 +92,17 @@ export default function Calculator({ medications }: CalculatorProps) {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-6xl px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
       {/* Weight Input */}
-      <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:mb-8 sm:p-6">
         <label
           htmlFor="weight"
           className="mb-2 block text-sm font-semibold text-[#1a2332] uppercase tracking-wide"
         >
           Peso del Caballo
         </label>
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-xs">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="relative flex-1 max-w-[10rem] sm:max-w-xs">
             <input
               id="weight"
               type="number"
@@ -114,9 +114,9 @@ export default function Calculator({ medications }: CalculatorProps) {
                 const val = parseInt(e.target.value, 10);
                 if (!isNaN(val)) setWeightKg(Math.min(1000, Math.max(50, val)));
               }}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-lg font-medium text-[#1a2332] focus:border-[#c8a45a] focus:outline-none focus:ring-2 focus:ring-[#c8a45a]/30"
+              className="w-full rounded-lg border border-gray-300 px-3 py-3 pr-10 text-lg font-medium text-[#1a2332] focus:border-[#c8a45a] focus:outline-none focus:ring-2 focus:ring-[#c8a45a]/30 sm:px-4 sm:pr-12"
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-400">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-400 sm:right-4">
               kg
             </span>
           </div>
@@ -129,41 +129,41 @@ export default function Calculator({ medications }: CalculatorProps) {
           step={10}
           value={weightKg}
           onChange={(e) => setWeightKg(parseInt(e.target.value, 10))}
-          className="mt-3 w-full max-w-xs accent-[#c8a45a]"
+          className="mt-3 w-full accent-[#c8a45a] sm:max-w-xs"
         />
       </div>
 
       {/* Result Panel - shows when medication is selected */}
       {selectedMed && selectedDose !== null && (
-        <div className="mb-8 rounded-xl border-2 border-[#c8a45a] bg-white shadow-lg overflow-hidden">
+        <div className="mb-6 rounded-xl border-2 border-[#c8a45a] bg-white shadow-lg overflow-hidden sm:mb-8">
           {/* Header */}
-          <div className="bg-[#1a2332] px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h3 className="text-xl font-bold text-white">
+          <div className="bg-[#1a2332] px-4 py-3 flex items-start justify-between gap-2 sm:px-6 sm:py-4 sm:items-center">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
+              <h3 className="text-base font-bold text-white sm:text-xl break-words">
                 {selectedMed.name}
               </h3>
               <span
-                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${getRouteBadge(selectedMed.route)}`}
+                className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${getRouteBadge(selectedMed.route)}`}
               >
                 {selectedMed.route}
               </span>
             </div>
             <button
               onClick={() => { setSelectedId(null); setSelectedDose(null); }}
-              className="text-gray-400 hover:text-white text-xl leading-none"
+              className="shrink-0 text-gray-400 hover:text-white text-xl leading-none p-1"
             >
               &times;
             </button>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="p-4 space-y-5 sm:p-6 sm:space-y-6">
             {/* Dose Selector */}
             <div>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex flex-col gap-1 mb-2 sm:flex-row sm:items-center sm:justify-between">
                 <label className="text-sm font-semibold text-[#1a2332] uppercase tracking-wide">
                   Dosis
                 </label>
-                <span className="text-sm text-gray-500">
+                <span className="text-xs text-gray-500 sm:text-sm">
                   Rango: {selectedMed.doseMin} — {selectedMed.doseMax} mg/kg
                 </span>
               </div>
@@ -236,36 +236,36 @@ export default function Calculator({ medications }: CalculatorProps) {
             </div>
 
             {/* Calculation Breakdown */}
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
               <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
                 Calculo
               </div>
-              <div className="grid grid-cols-3 gap-4 text-center mb-4">
+              <div className="grid grid-cols-3 gap-2 text-center mb-4 sm:gap-4">
                 <div>
                   <div className="text-xs text-gray-500">Dosis</div>
-                  <div className="text-lg font-semibold text-[#1a2332]">
+                  <div className="text-sm font-semibold text-[#1a2332] sm:text-lg">
                     {selectedDose} <span className="text-xs text-gray-400">mg/kg</span>
                   </div>
                 </div>
                 <div>
                   <div className="text-xs text-gray-500">Peso</div>
-                  <div className="text-lg font-semibold text-[#1a2332]">
+                  <div className="text-sm font-semibold text-[#1a2332] sm:text-lg">
                     {weightKg} <span className="text-xs text-gray-400">kg</span>
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-500">Concentracion</div>
-                  <div className="text-lg font-semibold text-[#1a2332]">
+                  <div className="text-xs text-gray-500">Conc.</div>
+                  <div className="text-sm font-semibold text-[#1a2332] sm:text-lg">
                     {selectedMed.concentration}{" "}
-                    <span className="text-xs text-gray-400">
+                    <span className="hidden text-xs text-gray-400 sm:inline">
                       {selectedMed.concentrationUnit}
                     </span>
                   </div>
                 </div>
               </div>
-              <div className="text-center text-xs text-gray-400 mb-3">
-                ({selectedDose} mg/kg &times; {weightKg} kg) &divide;{" "}
-                {selectedMed.concentration} {selectedMed.concentrationUnit} ={" "}
+              <div className="text-center text-xs text-gray-400 mb-3 leading-relaxed">
+                ({selectedDose} &times; {weightKg}) &divide;{" "}
+                {selectedMed.concentration} ={" "}
                 <strong className="text-[#1a2332]">
                   {formatVolume(volume, selectedMed.concentrationUnit)} {unit}
                 </strong>
@@ -273,15 +273,15 @@ export default function Calculator({ medications }: CalculatorProps) {
             </div>
 
             {/* Final Result */}
-            <div className="bg-[#c8a45a] rounded-xl px-6 py-5 text-center">
+            <div className="bg-[#c8a45a] rounded-xl px-4 py-4 text-center sm:px-6 sm:py-5">
               <div className="text-xs font-semibold text-white/70 uppercase tracking-widest mb-1">
                 Administrar
               </div>
-              <div className="text-4xl sm:text-5xl font-black text-white">
+              <div className="text-3xl font-black text-white sm:text-5xl">
                 {formatVolume(volume, selectedMed.concentrationUnit)}{" "}
-                <span className="text-2xl sm:text-3xl font-bold">{unit}</span>
+                <span className="text-xl font-bold sm:text-3xl">{unit}</span>
               </div>
-              <div className="text-sm text-white/80 mt-1">
+              <div className="text-xs text-white/80 mt-1 sm:text-sm">
                 via {selectedMed.route} | Total: {totalMg.toFixed(1)} mg
               </div>
             </div>
@@ -298,11 +298,11 @@ export default function Calculator({ medications }: CalculatorProps) {
 
       {/* Medication Grid */}
       {Object.entries(grouped).map(([category, meds]) => (
-        <div key={category} className="mb-8">
-          <h2 className="mb-4 border-b-2 border-[#c8a45a] pb-2 text-lg font-bold text-[#1a2332] uppercase tracking-wide">
+        <div key={category} className="mb-6 sm:mb-8">
+          <h2 className="mb-3 border-b-2 border-[#c8a45a] pb-2 text-base font-bold text-[#1a2332] uppercase tracking-wide sm:mb-4 sm:text-lg">
             {category}
           </h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
             {meds.map((med) => {
               const isSelected = selectedId === med.id;
 
@@ -311,21 +311,21 @@ export default function Calculator({ medications }: CalculatorProps) {
                   key={med.id}
                   type="button"
                   onClick={() => handleSelectMed(med)}
-                  className={`w-full cursor-pointer rounded-xl border-2 p-4 text-left transition-all ${
+                  className={`w-full cursor-pointer rounded-xl border-2 p-3 text-left transition-all active:scale-[0.98] sm:p-4 ${
                     isSelected
                       ? "border-[#c8a45a] bg-[#c8a45a]/5 shadow-md"
                       : "border-gray-200 bg-white hover:border-[#c8a45a]/50 hover:shadow-sm"
                   }`}
                 >
                   <div className="mb-1 flex items-start justify-between gap-2">
-                    <h3 className="font-semibold text-[#1a2332]">{med.name}</h3>
+                    <h3 className="text-sm font-semibold text-[#1a2332] sm:text-base">{med.name}</h3>
                     <span
                       className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-semibold ${getRouteBadge(med.route)}`}
                     >
                       {med.route}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs text-gray-500 sm:text-sm">
                     {med.doseMin === med.doseMax
                       ? `${med.doseMin} mg/kg`
                       : `${med.doseMin} — ${med.doseMax} mg/kg`}
