@@ -1,19 +1,8 @@
 'use client'
 
 import { useState, FormEvent } from 'react'
-
-interface Medication {
-  id: string
-  name: string
-  category: string
-  doseMin: number
-  doseMax: number
-  concentration: number
-  concentrationUnit: string
-  route: string
-  notes: string | null
-  isDefault: boolean
-}
+import type { Medication } from '@/types'
+import { MEDICATION_CATEGORIES, ROUTES, CONCENTRATION_UNITS } from '@/types'
 
 interface Props {
   initial: Medication | null
@@ -21,20 +10,16 @@ interface Props {
   onCancel: () => void
 }
 
-const CATEGORIES = ['Analgesic', 'Antibiotic', 'Induction']
-const ROUTES = ['IV', 'IM', 'PO', 'SQ']
-const UNITS = ['mg/ml', 'mg/tablet']
-
 export default function MedicationForm({ initial, onSave, onCancel }: Props) {
   const [name, setName] = useState(initial?.name ?? '')
-  const [category, setCategory] = useState(initial?.category ?? CATEGORIES[0])
+  const [category, setCategory] = useState(initial?.category ?? MEDICATION_CATEGORIES[0])
   const [doseMin, setDoseMin] = useState(initial?.doseMin?.toString() ?? '')
   const [doseMax, setDoseMax] = useState(initial?.doseMax?.toString() ?? '')
   const [concentration, setConcentration] = useState(
     initial?.concentration?.toString() ?? ''
   )
   const [concentrationUnit, setConcentrationUnit] = useState(
-    initial?.concentrationUnit ?? UNITS[0]
+    initial?.concentrationUnit ?? CONCENTRATION_UNITS[0]
   )
   const [route, setRoute] = useState(initial?.route ?? ROUTES[0])
   const [notes, setNotes] = useState(initial?.notes ?? '')
@@ -83,7 +68,7 @@ export default function MedicationForm({ initial, onSave, onCancel }: Props) {
             onChange={(e) => setCategory(e.target.value)}
             className={inputClass}
           >
-            {CATEGORIES.map((c) => (
+            {MEDICATION_CATEGORIES.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
@@ -149,7 +134,7 @@ export default function MedicationForm({ initial, onSave, onCancel }: Props) {
             onChange={(e) => setConcentrationUnit(e.target.value)}
             className={inputClass}
           >
-            {UNITS.map((u) => (
+            {CONCENTRATION_UNITS.map((u) => (
               <option key={u} value={u}>{u}</option>
             ))}
           </select>

@@ -4,40 +4,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { useEffect, useState, useCallback } from 'react'
 import MedicationForm from '@/components/admin/MedicationForm'
 import CriMedicationForm from '@/components/admin/CriMedicationForm'
-
-interface Medication {
-  id: string
-  name: string
-  category: string
-  doseMin: number
-  doseMax: number
-  concentration: number
-  concentrationUnit: string
-  route: string
-  notes: string | null
-  isDefault: boolean
-}
-
-interface CriMedication {
-  id: string
-  name: string
-  category: string
-  loadingDoseMin: number
-  loadingDoseMax: number
-  rateMin: number | null
-  rateMax: number | null
-  rateUnit: string | null
-  concentration: number
-  concentrationUnit: string
-  notes: string | null
-}
-
-interface AdminUser {
-  id: string
-  email: string
-  name: string | null
-  createdAt: string
-}
+import type { Medication, CriMedication, AdminUser } from '@/types'
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession()
@@ -534,12 +501,10 @@ export default function AdminDashboard() {
               </p>
             </div>
 
-            {/* Primary admin from env */}
-            {process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
-              <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-                <strong>Primary admin:</strong> {process.env.NEXT_PUBLIC_ADMIN_EMAIL} (set via environment variable)
-              </div>
-            )}
+            {/* Primary admin info */}
+            <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+              <strong>Primary admin</strong> is set via the <code className="bg-blue-100 px-1 rounded">ADMIN_EMAIL</code> environment variable and always has access.
+            </div>
 
             {/* Add admin form */}
             <form onSubmit={handleAddAdmin} className="mb-6">

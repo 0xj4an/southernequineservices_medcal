@@ -1,20 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-
-interface CriMedication {
-  id: string;
-  name: string;
-  category: string;
-  loadingDoseMin: number;
-  loadingDoseMax: number;
-  rateMin: number | null;
-  rateMax: number | null;
-  rateUnit: string | null;
-  concentration: number;
-  concentrationUnit: string;
-  notes: string | null;
-}
+import type { CriMedication } from "@/types";
 
 interface CriCalculatorProps {
   criMedications: CriMedication[];

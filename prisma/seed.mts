@@ -114,12 +114,21 @@ const medications = [
 ]
 
 async function main() {
-  console.log('Seeding medications...')
-  await prisma.medication.deleteMany({ where: { isDefault: true } })
+  console.log('Seeding default medications...')
   for (const med of medications) {
-    await prisma.medication.create({ data: med })
+    await prisma.medication.upsert({
+      where: {
+        // Use a composite lookup: find by name + route (unique enough for defaults)
+        id: (await prisma.medication.findFirst({
+          where: { name: med.name, route: med.route, isDefault: true },
+          select: { id: true },
+        }))?.id ?? 'nonexistent',
+      },
+      update: med,
+      create: med,
+    })
   }
-  console.log(`Seeded ${medications.length} medications.`)
+  console.log(`Seeded ${medications.length} default medications.`)
 }
 
 main()

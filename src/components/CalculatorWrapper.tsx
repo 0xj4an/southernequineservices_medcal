@@ -3,32 +3,7 @@
 import { useState } from "react";
 import Calculator from "./Calculator";
 import CriCalculator from "./CriCalculator";
-
-interface Medication {
-  id: string;
-  name: string;
-  category: string;
-  doseMin: number;
-  doseMax: number;
-  concentration: number;
-  concentrationUnit: string;
-  route: string;
-  notes: string | null;
-}
-
-interface CriMedication {
-  id: string;
-  name: string;
-  category: string;
-  loadingDoseMin: number;
-  loadingDoseMax: number;
-  rateMin: number | null;
-  rateMax: number | null;
-  rateUnit: string | null;
-  concentration: number;
-  concentrationUnit: string;
-  notes: string | null;
-}
+import type { Medication, CriMedication } from "@/types";
 
 interface Props {
   medications: Medication[];

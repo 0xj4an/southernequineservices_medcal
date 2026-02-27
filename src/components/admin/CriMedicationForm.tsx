@@ -1,20 +1,8 @@
 'use client'
 
 import { useState, FormEvent } from 'react'
-
-interface CriMedication {
-  id: string
-  name: string
-  category: string
-  loadingDoseMin: number
-  loadingDoseMax: number
-  rateMin: number | null
-  rateMax: number | null
-  rateUnit: string | null
-  concentration: number
-  concentrationUnit: string
-  notes: string | null
-}
+import type { CriMedication } from '@/types'
+import { MEDICATION_CATEGORIES, RATE_UNITS } from '@/types'
 
 interface Props {
   initial: CriMedication | null
@@ -22,12 +10,9 @@ interface Props {
   onCancel: () => void
 }
 
-const CATEGORIES = ['Analgesic', 'Sedation', 'Antibiotic', 'Induction', 'Other']
-const RATE_UNITS = ['mg/kg/hr', 'mg/kg/min', 'mcg/kg/hr', 'mcg/kg/min']
-
 export default function CriMedicationForm({ initial, onSave, onCancel }: Props) {
   const [name, setName] = useState(initial?.name ?? '')
-  const [category, setCategory] = useState(initial?.category ?? CATEGORIES[0])
+  const [category, setCategory] = useState(initial?.category ?? MEDICATION_CATEGORIES[0])
   const [loadingDoseMin, setLoadingDoseMin] = useState(initial?.loadingDoseMin?.toString() ?? '')
   const [loadingDoseMax, setLoadingDoseMax] = useState(initial?.loadingDoseMax?.toString() ?? '')
   const [hasRate, setHasRate] = useState(initial?.rateMin != null)
@@ -82,7 +67,7 @@ export default function CriMedicationForm({ initial, onSave, onCancel }: Props) 
           onChange={(e) => setCategory(e.target.value)}
           className={inputClass}
         >
-          {CATEGORIES.map((c) => (
+          {MEDICATION_CATEGORIES.map((c) => (
             <option key={c} value={c}>{c}</option>
           ))}
         </select>

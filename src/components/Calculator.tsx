@@ -1,18 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-
-interface Medication {
-  id: string;
-  name: string;
-  category: string;
-  doseMin: number;
-  doseMax: number;
-  concentration: number;
-  concentrationUnit: string;
-  route: string;
-  notes: string | null;
-}
+import type { Medication } from "@/types";
 
 interface CalculatorProps {
   medications: Medication[];
