@@ -21,3 +21,19 @@ model Medication {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
+
+model CriMedication {
+  id                String   @id @default(uuid())
+  name              String
+  category          String
+  loadingDoseMin    Float
+  loadingDoseMax    Float
+  rateMin           Float
+  rateMax           Float
+  rateUnit          String
+  concentration     Float
+  concentrationUnit String   @default("mg/ml")
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
