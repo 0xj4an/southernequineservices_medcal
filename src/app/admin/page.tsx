@@ -24,17 +24,24 @@ interface CriMedication {
   category: string
   loadingDoseMin: number
   loadingDoseMax: number
-  rateMin: number
-  rateMax: number
-  rateUnit: string
+  rateMin: number | null
+  rateMax: number | null
+  rateUnit: string | null
   concentration: number
   concentrationUnit: string
   notes: string | null
 }
 
+interface AdminUser {
+  id: string
+  email: string
+  name: string | null
+  createdAt: string
+}
+
 export default function AdminDashboard() {
   const { data: session, status } = useSession()
-  const [activeTab, setActiveTab] = useState<'bolus' | 'cri'>('bolus')
+  const [activeTab, setActiveTab] = useState<'bolus' | 'cri' | 'users'>('bolus')
 
   // Bolus state
   const [medications, setMedications] = useState<Medication[]>([])
@@ -42,6 +49,13 @@ export default function AdminDashboard() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Medication | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
+
+  // Admin users state
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([])
+  const [adminLoading, setAdminLoading] = useState(true)
+  const [newAdminEmail, setNewAdminEmail] = useState('')
+  const [addingAdmin, setAddingAdmin] = useState(false)
+  const [adminError, setAdminError] = useState('')
 
   // CRI state
   const [criMedications, setCriMedications] = useState<CriMedication[]>([])
@@ -64,12 +78,20 @@ export default function AdminDashboard() {
     setCriLoading(false)
   }, [])
 
+  const fetchAdminUsers = useCallback(async () => {
+    const res = await fetch('/api/admin-users')
+    const data = await res.json()
+    setAdminUsers(data)
+    setAdminLoading(false)
+  }, [])
+
   useEffect(() => {
     if (status === 'authenticated') {
       fetchMedications()
       fetchCriMedications()
+      fetchAdminUsers()
     }
-  }, [status, fetchMedications, fetchCriMedications])
+  }, [status, fetchMedications, fetchCriMedications, fetchAdminUsers])
 
   // Bolus handlers
   async function handleDelete(id: string) {
@@ -147,7 +169,34 @@ export default function AdminDashboard() {
     await fetchCriMedications()
   }
 
-  if (status === 'loading' || loading || criLoading) {
+  // Admin user handlers
+  async function handleAddAdmin(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newAdminEmail.trim()) return
+    setAddingAdmin(true)
+    setAdminError('')
+    const res = await fetch('/api/admin-users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: newAdminEmail.trim() }),
+    })
+    if (!res.ok) {
+      const data = await res.json()
+      setAdminError(data.error || 'Failed to add admin')
+    } else {
+      setNewAdminEmail('')
+    }
+    setAddingAdmin(false)
+    await fetchAdminUsers()
+  }
+
+  async function handleRemoveAdmin(id: string) {
+    if (!confirm('Remove this admin user?')) return
+    await fetch(`/api/admin-users/${id}`, { method: 'DELETE' })
+    await fetchAdminUsers()
+  }
+
+  if (status === 'loading' || loading || criLoading || adminLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-100">
         <div className="text-gray-500">Loading...</div>
@@ -221,6 +270,16 @@ export default function AdminDashboard() {
               }`}
             >
               CRI Medications ({criMedications.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`px-4 py-2.5 text-sm font-medium transition-colors ${
+                activeTab === 'users'
+                  ? 'text-[#c8a45a] border-b-2 border-[#c8a45a]'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              Admin Users
             </button>
           </div>
         </div>
@@ -412,10 +471,16 @@ export default function AdminDashboard() {
                               : `${med.loadingDoseMin} - ${med.loadingDoseMax} mg/kg`}
                           </td>
                           <td className="px-4 py-3 text-gray-600">
-                            {med.rateMin === med.rateMax
-                              ? `${med.rateMin}`
-                              : `${med.rateMin} - ${med.rateMax}`}
-                            {' '}{med.rateUnit}
+                            {med.rateMin != null && med.rateMax != null ? (
+                              <>
+                                {med.rateMin === med.rateMax
+                                  ? `${med.rateMin}`
+                                  : `${med.rateMin} - ${med.rateMax}`}
+                                {' '}{med.rateUnit}
+                              </>
+                            ) : (
+                              <span className="text-gray-400 italic">Loading dose only</span>
+                            )}
                           </td>
                           <td className="px-4 py-3 text-gray-600">
                             {med.concentration} {med.concentrationUnit}
@@ -452,6 +517,94 @@ export default function AdminDashboard() {
                 >
                   Add your first CRI medication
                 </button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ===== ADMIN USERS TAB ===== */}
+        {activeTab === 'users' && (
+          <>
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-[#1a2332] mb-1">
+                Admin Users
+              </h2>
+              <p className="text-sm text-gray-500">
+                Manage who can access the admin dashboard. Users sign in with Google.
+              </p>
+            </div>
+
+            {/* Primary admin from env */}
+            {process.env.NEXT_PUBLIC_ADMIN_EMAIL && (
+              <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                <strong>Primary admin:</strong> {process.env.NEXT_PUBLIC_ADMIN_EMAIL} (set via environment variable)
+              </div>
+            )}
+
+            {/* Add admin form */}
+            <form onSubmit={handleAddAdmin} className="mb-6">
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  value={newAdminEmail}
+                  onChange={(e) => { setNewAdminEmail(e.target.value); setAdminError('') }}
+                  placeholder="Enter Google email address"
+                  required
+                  className="flex-1 rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-900 focus:border-[#c8a45a] focus:outline-none focus:ring-1 focus:ring-[#c8a45a]"
+                />
+                <button
+                  type="submit"
+                  disabled={addingAdmin}
+                  className="rounded-md bg-[#c8a45a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#b8943a] transition-colors disabled:opacity-50"
+                >
+                  {addingAdmin ? 'Adding...' : '+ Add Admin'}
+                </button>
+              </div>
+              {adminError && (
+                <p className="mt-2 text-sm text-red-600">{adminError}</p>
+              )}
+            </form>
+
+            {/* Admin users list */}
+            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Email</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Added</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {adminUsers.map((user) => (
+                    <tr key={user.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium text-[#1a2332]">
+                        {user.email}
+                        {user.email === session?.user?.email && (
+                          <span className="ml-2 text-xs text-[#c8a45a]">(you)</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-gray-500">
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => handleRemoveAdmin(user.id)}
+                          className="text-red-500 hover:text-red-700 font-medium"
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {adminUsers.length === 0 && (
+              <div className="mt-4 rounded-lg border border-gray-200 bg-white py-8 text-center">
+                <p className="text-gray-500 text-sm">No additional admin users added yet.</p>
+                <p className="text-gray-400 text-xs mt-1">The primary admin (env variable) always has access.</p>
               </div>
             )}
           </>

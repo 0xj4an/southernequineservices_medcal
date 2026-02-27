@@ -29,9 +29,6 @@ export async function POST(request: NextRequest) {
       'category',
       'loadingDoseMin',
       'loadingDoseMax',
-      'rateMin',
-      'rateMax',
-      'rateUnit',
       'concentration',
     ] as const
 
@@ -52,9 +49,9 @@ export async function POST(request: NextRequest) {
         category: body.category,
         loadingDoseMin: body.loadingDoseMin,
         loadingDoseMax: body.loadingDoseMax,
-        rateMin: body.rateMin,
-        rateMax: body.rateMax,
-        rateUnit: body.rateUnit,
+        rateMin: body.rateMin ?? null,
+        rateMax: body.rateMax ?? null,
+        rateUnit: body.rateUnit ?? null,
         concentration: body.concentration,
         concentrationUnit: body.concentrationUnit ?? 'mg/ml',
         notes: body.notes ?? null,

@@ -22,15 +22,22 @@ model Medication {
   updatedAt         DateTime @updatedAt
 }
 
+model AdminUser {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+}
+
 model CriMedication {
   id                String   @id @default(uuid())
   name              String
   category          String
   loadingDoseMin    Float
   loadingDoseMax    Float
-  rateMin           Float
-  rateMax           Float
-  rateUnit          String
+  rateMin           Float?
+  rateMax           Float?
+  rateUnit          String?
   concentration     Float
   concentrationUnit String   @default("mg/ml")
   notes             String?
