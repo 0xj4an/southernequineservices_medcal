@@ -57,6 +57,16 @@ export interface PatientInfo {
   weightKg: number
 }
 
+export interface MedicationRecord {
+  id: string
+  surgeonName: string
+  horseName: string
+  procedureName: string
+  weightKg: number
+  protocol: ProtocolItem[]
+  createdAt: string
+}
+
 export const MEDICATION_CATEGORIES = ['Analgesic', 'Sedation', 'Antibiotic', 'Induction', 'Other'] as const
 export const ROUTES = ['IV', 'IM', 'PO', 'SQ'] as const
 export const CONCENTRATION_UNITS = ['mg/ml', 'mg/tablet'] as const
