@@ -4,11 +4,11 @@ import { useSession, signOut } from 'next-auth/react'
 import { useEffect, useState, useCallback } from 'react'
 import MedicationForm from '@/components/admin/MedicationForm'
 import CriMedicationForm from '@/components/admin/CriMedicationForm'
-import type { Medication, CriMedication, AdminUser } from '@/types'
+import type { Medication, CriMedication, AdminUser, Procedure } from '@/types'
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession()
-  const [activeTab, setActiveTab] = useState<'bolus' | 'cri' | 'users'>('bolus')
+  const [activeTab, setActiveTab] = useState<'bolus' | 'cri' | 'users' | 'procedures'>('bolus')
 
   // Bolus state
   const [medications, setMedications] = useState<Medication[]>([])
@@ -31,6 +31,14 @@ export default function AdminDashboard() {
   const [editingCri, setEditingCri] = useState<CriMedication | null>(null)
   const [deletingCri, setDeletingCri] = useState<string | null>(null)
 
+  // Procedures state
+  const [procedures, setProcedures] = useState<Procedure[]>([])
+  const [proceduresLoading, setProceduresLoading] = useState(true)
+  const [newProcedureName, setNewProcedureName] = useState('')
+  const [addingProcedure, setAddingProcedure] = useState(false)
+  const [procedureError, setProcedureError] = useState('')
+  const [deletingProcedure, setDeletingProcedure] = useState<string | null>(null)
+
   const fetchMedications = useCallback(async () => {
     const res = await fetch('/api/medications')
     const data = await res.json()
@@ -52,13 +60,21 @@ export default function AdminDashboard() {
     setAdminLoading(false)
   }, [])
 
+  const fetchProcedures = useCallback(async () => {
+    const res = await fetch('/api/procedures')
+    const data = await res.json()
+    setProcedures(data)
+    setProceduresLoading(false)
+  }, [])
+
   useEffect(() => {
     if (status === 'authenticated') {
       fetchMedications()
       fetchCriMedications()
       fetchAdminUsers()
+      fetchProcedures()
     }
-  }, [status, fetchMedications, fetchCriMedications, fetchAdminUsers])
+  }, [status, fetchMedications, fetchCriMedications, fetchAdminUsers, fetchProcedures])
 
   // Bolus handlers
   async function handleDelete(id: string) {
@@ -163,7 +179,36 @@ export default function AdminDashboard() {
     await fetchAdminUsers()
   }
 
-  if (status === 'loading' || loading || criLoading || adminLoading) {
+  // Procedure handlers
+  async function handleAddProcedure(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newProcedureName.trim()) return
+    setAddingProcedure(true)
+    setProcedureError('')
+    const res = await fetch('/api/procedures', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newProcedureName.trim() }),
+    })
+    if (!res.ok) {
+      const data = await res.json()
+      setProcedureError(data.error || 'Failed to add procedure')
+    } else {
+      setNewProcedureName('')
+    }
+    setAddingProcedure(false)
+    await fetchProcedures()
+  }
+
+  async function handleDeleteProcedure(id: string) {
+    if (!confirm('Delete this procedure?')) return
+    setDeletingProcedure(id)
+    await fetch(`/api/procedures/${id}`, { method: 'DELETE' })
+    await fetchProcedures()
+    setDeletingProcedure(null)
+  }
+
+  if (status === 'loading' || loading || criLoading || adminLoading || proceduresLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-100">
         <div className="text-gray-500">Loading...</div>
@@ -247,6 +292,16 @@ export default function AdminDashboard() {
               }`}
             >
               Admin Users
+            </button>
+            <button
+              onClick={() => setActiveTab('procedures')}
+              className={`px-4 py-2.5 text-sm font-medium transition-colors ${
+                activeTab === 'procedures'
+                  ? 'text-[#c8a45a] border-b-2 border-[#c8a45a]'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              Procedures ({procedures.length})
             </button>
           </div>
         </div>
@@ -570,6 +625,83 @@ export default function AdminDashboard() {
               <div className="mt-4 rounded-lg border border-gray-200 bg-white py-8 text-center">
                 <p className="text-gray-500 text-sm">No additional admin users added yet.</p>
                 <p className="text-gray-400 text-xs mt-1">The primary admin (env variable) always has access.</p>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ===== PROCEDURES TAB ===== */}
+        {activeTab === 'procedures' && (
+          <>
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-[#1a2332] mb-1">
+                Procedures ({procedures.length})
+              </h2>
+              <p className="text-sm text-gray-500">
+                Manage the list of procedures available in the calculator dropdown.
+              </p>
+            </div>
+
+            {/* Add procedure form */}
+            <form onSubmit={handleAddProcedure} className="mb-6">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newProcedureName}
+                  onChange={(e) => { setNewProcedureName(e.target.value); setProcedureError('') }}
+                  placeholder="Enter procedure name"
+                  required
+                  className="flex-1 rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-900 focus:border-[#c8a45a] focus:outline-none focus:ring-1 focus:ring-[#c8a45a]"
+                />
+                <button
+                  type="submit"
+                  disabled={addingProcedure}
+                  className="rounded-md bg-[#c8a45a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#b8943a] transition-colors disabled:opacity-50"
+                >
+                  {addingProcedure ? 'Adding...' : '+ Add Procedure'}
+                </button>
+              </div>
+              {procedureError && (
+                <p className="mt-2 text-sm text-red-600">{procedureError}</p>
+              )}
+            </form>
+
+            {/* Procedures list */}
+            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Procedure Name</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {procedures.map((proc) => (
+                    <tr key={proc.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium text-[#1a2332]">
+                        {proc.name}
+                        {proc.isDefault && (
+                          <span className="ml-2 text-xs text-gray-400">(default)</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => handleDeleteProcedure(proc.id)}
+                          disabled={deletingProcedure === proc.id}
+                          className="text-red-500 hover:text-red-700 font-medium disabled:opacity-50"
+                        >
+                          {deletingProcedure === proc.id ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {procedures.length === 0 && (
+              <div className="mt-4 rounded-lg border border-gray-200 bg-white py-8 text-center">
+                <p className="text-gray-500 text-sm">No procedures yet.</p>
               </div>
             )}
           </>

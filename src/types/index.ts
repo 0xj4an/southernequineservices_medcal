@@ -34,6 +34,7 @@ export interface AdminUser {
 
 export interface ProtocolItem {
   id: string
+  medId: string
   type: 'bolus' | 'cri'
   name: string
   route: string
@@ -41,6 +42,19 @@ export interface ProtocolItem {
   result: string
   totalMg: string
   notes?: string
+}
+
+export interface Procedure {
+  id: string
+  name: string
+  isDefault: boolean
+}
+
+export interface PatientInfo {
+  surgeonName: string
+  horseName: string
+  procedureName: string
+  weightKg: number
 }
 
 export const MEDICATION_CATEGORIES = ['Analgesic', 'Sedation', 'Antibiotic', 'Induction', 'Other'] as const

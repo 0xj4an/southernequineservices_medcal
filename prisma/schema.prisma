@@ -29,6 +29,23 @@ model AdminUser {
   createdAt DateTime @default(now())
 }
 
+model MedicationRecord {
+  id            String   @id @default(uuid())
+  surgeonName   String
+  horseName     String
+  procedureName String
+  weightKg      Float
+  protocol      Json
+  createdAt     DateTime @default(now())
+}
+
+model Procedure {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
 model CriMedication {
   id                String   @id @default(uuid())
   name              String

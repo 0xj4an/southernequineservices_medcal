@@ -139,6 +139,24 @@ const criMedications = [
   },
 ]
 
+const procedures = [
+  'Arthroscopy',
+  'Castration',
+  'Cesarean Section',
+  'Colic Surgery',
+  'Dental Extraction',
+  'Endoscopy',
+  'Eye Removal',
+  'Fracture Repair',
+  'Laceration Repair',
+  'Laparoscopy',
+  'Mass Removal',
+  'Septic Joint Lavage',
+  'Sinus Surgery',
+  'Tendon Surgery',
+  'Upper Airway Surgery',
+]
+
 async function main() {
   console.log('Seeding default medications...')
   for (const med of medications) {
@@ -169,6 +187,16 @@ async function main() {
     })
   }
   console.log(`Seeded ${criMedications.length} CRI medications.`)
+
+  console.log('Seeding procedures...')
+  for (const name of procedures) {
+    await prisma.procedure.upsert({
+      where: { name },
+      update: { isDefault: true },
+      create: { name, isDefault: true },
+    })
+  }
+  console.log(`Seeded ${procedures.length} procedures.`)
 }
 
 main()

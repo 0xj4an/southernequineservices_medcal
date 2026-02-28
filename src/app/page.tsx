@@ -13,6 +13,10 @@ export default async function Home() {
     orderBy: [{ category: "asc" }, { name: "asc" }],
   });
 
+  const procedures = await prisma.procedure.findMany({
+    orderBy: { name: "asc" },
+  });
+
   return (
     <div className="flex min-h-screen flex-col bg-[#f8f9fa]">
       <Header />
@@ -21,6 +25,7 @@ export default async function Home() {
         <CalculatorWrapper
           medications={medications}
           criMedications={criMedications}
+          procedures={procedures}
         />
       </main>
 
