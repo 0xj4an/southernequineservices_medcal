@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import type { Medication } from "@/types";
+import type { Medication, ProtocolItem } from "@/types";
 
 interface CalculatorProps {
   medications: Medication[];
+  onAddToProtocol?: (item: ProtocolItem) => void;
 }
 
 const routeColors: Record<string, string> = {
@@ -22,7 +23,7 @@ function getResultUnit(concentrationUnit: string): string {
   return concentrationUnit === "mg/tablet" ? "tablets" : "ml";
 }
 
-export default function Calculator({ medications }: CalculatorProps) {
+export default function Calculator({ medications, onAddToProtocol }: CalculatorProps) {
   const [weightKg, setWeightKg] = useState(450);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedDose, setSelectedDose] = useState<number | null>(null);
@@ -36,7 +37,12 @@ export default function Calculator({ medications }: CalculatorProps) {
       groups[med.category].push(med);
     }
     const sorted: Record<string, Medication[]> = {};
-    for (const key of Object.keys(groups).sort()) {
+    const keys = Object.keys(groups).sort((a, b) => {
+      if (a === "Other") return 1;
+      if (b === "Other") return -1;
+      return a.localeCompare(b);
+    });
+    for (const key of keys) {
       sorted[key] = groups[key].sort((a, b) => a.name.localeCompare(b.name));
     }
     return sorted;
@@ -280,6 +286,27 @@ export default function Calculator({ medications }: CalculatorProps) {
               <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900 border border-amber-200">
                 <span className="font-semibold">Note:</span> {selectedMed.notes}
               </div>
+            )}
+
+            {/* Add to Protocol */}
+            {onAddToProtocol && (
+              <button
+                type="button"
+                onClick={() => {
+                  onAddToProtocol({
+                    id: `bolus-${selectedMed.id}-${Date.now()}`,
+                    type: "bolus",
+                    name: selectedMed.name,
+                    route: selectedMed.route,
+                    dose: `${selectedDose} mg/kg`,
+                    result: `${formatVolume(volume, selectedMed.concentrationUnit)} ${unit}`,
+                    totalMg: `${totalMg.toFixed(1)} mg`,
+                  });
+                }}
+                className="w-full rounded-lg border-2 border-[#c8a45a] bg-[#c8a45a]/10 px-4 py-3 text-sm font-bold text-[#c8a45a] transition-all hover:bg-[#c8a45a]/20 active:scale-[0.98]"
+              >
+                + Add to Protocol
+              </button>
             )}
           </div>
         </div>

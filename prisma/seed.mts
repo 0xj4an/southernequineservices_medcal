@@ -111,6 +111,32 @@ const medications = [
     notes: 'Dissociative anesthetic. Must be given after adequate sedation. Duration: 10-15 min. Do not give without prior sedation.',
     isDefault: true,
   },
+  {
+    name: 'Diazepam',
+    category: 'Induction',
+    doseMin: 0.05,
+    doseMax: 0.1,
+    concentration: 5,
+    concentrationUnit: 'mg/ml',
+    route: 'IV',
+    notes: 'Co-induction agent with ketamine. IV only. Do NOT give alone — causes ataxia and excitement. Light sensitive, do not store in plastic syringes. Incompatible with most drugs except ketamine.',
+    isDefault: true,
+  },
+]
+
+const criMedications = [
+  {
+    name: 'Dobutamine',
+    category: 'Induction',
+    loadingDoseMin: 0,
+    loadingDoseMax: 0,
+    rateMin: 1,
+    rateMax: 5,
+    rateUnit: 'mcg/kg/min',
+    concentration: 12.5,
+    concentrationUnit: 'mg/ml',
+    notes: 'Beta-1 agonist inotrope. NO loading dose — start CRI at 1-2 mcg/kg/min, titrate q3-5 min to MAP ≥70 mmHg. Max 5 mcg/kg/min. Requires continuous arterial BP & ECG monitoring. Reduce/stop if HR >45-50 bpm or arrhythmias. Half-life ~2 min. Primary use: intraoperative hypotension under general anesthesia. Do not bolus.',
+  },
 ]
 
 async function main() {
@@ -118,7 +144,6 @@ async function main() {
   for (const med of medications) {
     await prisma.medication.upsert({
       where: {
-        // Use a composite lookup: find by name + route (unique enough for defaults)
         id: (await prisma.medication.findFirst({
           where: { name: med.name, route: med.route, isDefault: true },
           select: { id: true },
@@ -129,6 +154,21 @@ async function main() {
     })
   }
   console.log(`Seeded ${medications.length} default medications.`)
+
+  console.log('Seeding CRI medications...')
+  for (const cri of criMedications) {
+    await prisma.criMedication.upsert({
+      where: {
+        id: (await prisma.criMedication.findFirst({
+          where: { name: cri.name },
+          select: { id: true },
+        }))?.id ?? 'nonexistent',
+      },
+      update: cri,
+      create: cri,
+    })
+  }
+  console.log(`Seeded ${criMedications.length} CRI medications.`)
 }
 
 main()

@@ -32,6 +32,17 @@ export interface AdminUser {
   createdAt: string
 }
 
+export interface ProtocolItem {
+  id: string
+  type: 'bolus' | 'cri'
+  name: string
+  route: string
+  dose: string
+  result: string
+  totalMg: string
+  notes?: string
+}
+
 export const MEDICATION_CATEGORIES = ['Analgesic', 'Sedation', 'Antibiotic', 'Induction', 'Other'] as const
 export const ROUTES = ['IV', 'IM', 'PO', 'SQ'] as const
 export const CONCENTRATION_UNITS = ['mg/ml', 'mg/tablet'] as const
