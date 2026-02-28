@@ -95,13 +95,13 @@ export default function Calculator({ medications }: CalculatorProps) {
             <input
               id="weight"
               type="number"
-              min={100}
-              max={1000}
-              step={10}
+              min={25}
+              max={2000}
+              step={5}
               value={weightKg}
               onChange={(e) => {
                 const val = parseInt(e.target.value, 10);
-                if (!isNaN(val)) setWeightKg(Math.min(1000, Math.max(50, val)));
+                if (!isNaN(val)) setWeightKg(Math.min(2000, Math.max(25, val)));
               }}
               className="w-full rounded-lg border border-gray-300 px-3 py-3 pr-10 text-lg font-medium text-[#1a2332] focus:border-[#c8a45a] focus:outline-none focus:ring-2 focus:ring-[#c8a45a]/30 sm:px-4 sm:pr-12"
             />
@@ -113,9 +113,9 @@ export default function Calculator({ medications }: CalculatorProps) {
         </div>
         <input
           type="range"
-          min={50}
-          max={1000}
-          step={10}
+          min={25}
+          max={2000}
+          step={5}
           value={weightKg}
           onChange={(e) => setWeightKg(parseInt(e.target.value, 10))}
           className="mt-3 w-full accent-[#c8a45a] sm:max-w-xs"

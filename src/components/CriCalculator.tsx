@@ -9,6 +9,29 @@ interface CriCalculatorProps {
 
 const DILUENTS = ["NaCl 0.9%", "Lactated Ringer's", "D5W", "Sterile Water"];
 const COMMON_VOLUMES = [12, 60, 250, 500, 1000, 2000, 3000, 5000];
+const DURATION_UNITS = ["hrs", "min", "sec"] as const;
+type DurationUnit = typeof DURATION_UNITS[number];
+
+const OUTPUT_UNITS = ["ml/hr", "ml/min", "drops/min"] as const;
+type OutputUnit = typeof OUTPUT_UNITS[number];
+const DROPS_PER_ML = 15; // standard macrodrip set
+
+/** Convert duration value to hours based on unit */
+function toHours(value: number, unit: DurationUnit): number {
+  switch (unit) {
+    case "min": return value / 60;
+    case "sec": return value / 3600;
+    case "hrs":
+    default: return value;
+  }
+}
+
+/** Format hours back to a display string */
+function formatDuration(hours: number): string {
+  if (hours >= 1) return `${hours.toFixed(1)} hrs`;
+  if (hours * 60 >= 1) return `${(hours * 60).toFixed(1)} min`;
+  return `${(hours * 3600).toFixed(0)} sec`;
+}
 
 function getDoseStep(min: number, max: number): number {
   const range = max - min;
@@ -39,9 +62,12 @@ export default function CriCalculator({ criMedications }: CriCalculatorProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedLoadingDose, setSelectedLoadingDose] = useState<number | null>(null);
   const [selectedRate, setSelectedRate] = useState<number | null>(null);
+  const [showDilution, setShowDilution] = useState(false);
   const [bagVolume, setBagVolume] = useState(1000);
-  const [durationHrs, setDurationHrs] = useState(12);
+  const [durationValue, setDurationValue] = useState(12);
+  const [durationUnit, setDurationUnit] = useState<DurationUnit>("hrs");
   const [diluent, setDiluent] = useState(DILUENTS[0]);
+  const [outputUnit, setOutputUnit] = useState<OutputUnit>("ml/hr");
 
   const weightLbs = (weightKg * 2.205).toFixed(0);
 
@@ -89,12 +115,26 @@ export default function CriCalculator({ criMedications }: CriCalculatorProps) {
   const rateUnit = selectedMed?.rateUnit ?? "mg/kg/hr";
   const rateInMgKgHr = toMgKgHr(rate, rateUnit);
 
+  // Convert duration to hours for all calculations
+  const durationHrs = toHours(durationValue, durationUnit);
+
   // Total drug needed over duration
   const totalDrugMg = rateInMgKgHr * weightKg * durationHrs;
   // Volume of drug to add to bag
   const drugToAddMl = selectedMed ? totalDrugMg / selectedMed.concentration : 0;
   // Drip rate
-  const dripRateMlHr = bagVolume / durationHrs;
+  const dripRateMlHr = durationHrs > 0 ? bagVolume / durationHrs : 0;
+
+  // Output rate conversion
+  function getOutputRate(): { value: number; label: string } {
+    switch (outputUnit) {
+      case "ml/min": return { value: dripRateMlHr / 60, label: "ml/min" };
+      case "drops/min": return { value: (dripRateMlHr / 60) * DROPS_PER_ML, label: "drops/min" };
+      case "ml/hr":
+      default: return { value: dripRateMlHr, label: "ml/hr" };
+    }
+  }
+  const outputRate = getOutputRate();
 
   return (
     <div className="mx-auto max-w-6xl px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
@@ -111,13 +151,13 @@ export default function CriCalculator({ criMedications }: CriCalculatorProps) {
             <input
               id="cri-weight"
               type="number"
-              min={100}
-              max={1000}
-              step={10}
+              min={25}
+              max={2000}
+              step={5}
               value={weightKg}
               onChange={(e) => {
                 const val = parseInt(e.target.value, 10);
-                if (!isNaN(val)) setWeightKg(Math.min(1000, Math.max(50, val)));
+                if (!isNaN(val)) setWeightKg(Math.min(2000, Math.max(25, val)));
               }}
               className="w-full rounded-lg border border-gray-300 px-3 py-3 pr-10 text-lg font-medium text-[#1a2332] focus:border-[#c8a45a] focus:outline-none focus:ring-2 focus:ring-[#c8a45a]/30 sm:px-4 sm:pr-12"
             />
@@ -129,9 +169,9 @@ export default function CriCalculator({ criMedications }: CriCalculatorProps) {
         </div>
         <input
           type="range"
-          min={50}
-          max={1000}
-          step={10}
+          min={25}
+          max={2000}
+          step={5}
           value={weightKg}
           onChange={(e) => setWeightKg(parseInt(e.target.value, 10))}
           className="mt-3 w-full accent-[#c8a45a] sm:max-w-xs"
@@ -319,164 +359,217 @@ export default function CriCalculator({ criMedications }: CriCalculatorProps) {
                   </>
                 )}
 
-                {/* Infusion Setup: Duration, Bag, Diluent */}
-                <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-3 sm:p-4">
-                  <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
-                    Infusion Setup
-                  </div>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
-                        Duration
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          min={1}
-                          max={72}
-                          step={1}
-                          value={durationHrs}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value, 10);
-                            if (!isNaN(val) && val > 0) setDurationHrs(val);
-                          }}
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-10 text-sm font-medium text-[#1a2332] focus:border-[#c8a45a] focus:outline-none focus:ring-2 focus:ring-[#c8a45a]/30"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-                          hrs
-                        </span>
+                {/* Dilution Toggle */}
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowDilution(!showDilution)}
+                    className={`w-full flex items-center justify-between rounded-xl border px-4 py-3 text-sm font-medium transition-colors ${
+                      showDilution
+                        ? "border-[#c8a45a] bg-[#c8a45a]/5 text-[#1a2332]"
+                        : "border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300"
+                    }`}
+                  >
+                    <span>Dilution & Infusion Setup</span>
+                    <span className={`transition-transform ${showDilution ? "rotate-180" : ""}`}>
+                      &#9662;
+                    </span>
+                  </button>
+                </div>
+
+                {showDilution && (
+                  <>
+                    {/* Infusion Setup: Duration, Bag, Diluent */}
+                    <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-3 sm:p-4">
+                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                        Infusion Setup
                       </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
-                        Volume (ml)
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          min={1}
-                          max={10000}
-                          step={1}
-                          value={bagVolume}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value, 10);
-                            if (!isNaN(val) && val > 0) setBagVolume(val);
-                          }}
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-10 text-sm font-medium text-[#1a2332] focus:border-[#c8a45a] focus:outline-none focus:ring-2 focus:ring-[#c8a45a]/30"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-                          ml
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap gap-1 mt-1.5">
-                        {COMMON_VOLUMES.map((vol) => (
-                          <button
-                            key={vol}
-                            type="button"
-                            onClick={() => setBagVolume(vol)}
-                            className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
-                              bagVolume === vol
-                                ? "bg-[#c8a45a] text-white"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Duration
+                          </label>
+                          <div className="flex gap-1.5">
+                            <div className="relative flex-1">
+                              <input
+                                type="number"
+                                min={1}
+                                step={durationUnit === "sec" ? 10 : 1}
+                                value={durationValue}
+                                onChange={(e) => {
+                                  const val = parseFloat(e.target.value);
+                                  if (!isNaN(val) && val > 0) setDurationValue(val);
+                                }}
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-medium text-[#1a2332] focus:border-[#c8a45a] focus:outline-none focus:ring-2 focus:ring-[#c8a45a]/30"
+                              />
+                            </div>
+                            <select
+                              value={durationUnit}
+                              onChange={(e) => setDurationUnit(e.target.value as DurationUnit)}
+                              className="rounded-lg border border-gray-300 px-2 py-2.5 text-sm font-medium text-[#1a2332] focus:border-[#c8a45a] focus:outline-none focus:ring-2 focus:ring-[#c8a45a]/30"
+                            >
+                              {DURATION_UNITS.map((u) => (
+                                <option key={u} value={u}>{u}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Volume (ml)
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              min={1}
+                              max={10000}
+                              step={1}
+                              value={bagVolume}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value, 10);
+                                if (!isNaN(val) && val > 0) setBagVolume(val);
+                              }}
+                              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-10 text-sm font-medium text-[#1a2332] focus:border-[#c8a45a] focus:outline-none focus:ring-2 focus:ring-[#c8a45a]/30"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                              ml
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-1 mt-1.5">
+                            {COMMON_VOLUMES.map((vol) => (
+                              <button
+                                key={vol}
+                                type="button"
+                                onClick={() => setBagVolume(vol)}
+                                className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+                                  bagVolume === vol
+                                    ? "bg-[#c8a45a] text-white"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                }`}
+                              >
+                                {vol}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Diluent
+                          </label>
+                          <select
+                            value={diluent}
+                            onChange={(e) => setDiluent(e.target.value)}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-medium text-[#1a2332] focus:border-[#c8a45a] focus:outline-none focus:ring-2 focus:ring-[#c8a45a]/30"
                           >
-                            {vol}
-                          </button>
-                        ))}
+                            {DILUENTS.map((d) => (
+                              <option key={d} value={d}>{d}</option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
-                        Diluent
-                      </label>
-                      <select
-                        value={diluent}
-                        onChange={(e) => setDiluent(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-medium text-[#1a2332] focus:border-[#c8a45a] focus:outline-none focus:ring-2 focus:ring-[#c8a45a]/30"
-                      >
-                        {DILUENTS.map((d) => (
-                          <option key={d} value={d}>{d}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Calculation breakdown */}
-                <div className="bg-gray-50 rounded-lg p-3 mt-3 sm:p-4">
-                  <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
-                    Calculation
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-center mb-3 sm:grid-cols-4 sm:gap-3">
-                    <div>
-                      <div className="text-xs text-gray-500">Rate</div>
-                      <div className="text-sm font-semibold text-[#1a2332]">
-                        {selectedRate} <span className="text-xs text-gray-400">{selectedMed.rateUnit}</span>
+                    {/* Calculation breakdown */}
+                    <div className="bg-gray-50 rounded-lg p-3 mt-3 sm:p-4">
+                      <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                        Calculation
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-center mb-3 sm:grid-cols-4 sm:gap-3">
+                        <div>
+                          <div className="text-xs text-gray-500">Rate</div>
+                          <div className="text-sm font-semibold text-[#1a2332]">
+                            {selectedRate} <span className="text-xs text-gray-400">{selectedMed.rateUnit}</span>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500">Weight</div>
+                          <div className="text-sm font-semibold text-[#1a2332]">
+                            {weightKg} <span className="text-xs text-gray-400">kg</span>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500">Duration</div>
+                          <div className="text-sm font-semibold text-[#1a2332]">
+                            {durationValue} <span className="text-xs text-gray-400">{durationUnit}</span>
+                            {durationUnit !== "hrs" && (
+                              <span className="text-xs text-gray-400"> ({formatDuration(durationHrs)})</span>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500">Conc.</div>
+                          <div className="text-sm font-semibold text-[#1a2332]">
+                            {selectedMed.concentration} <span className="text-xs text-gray-400">{selectedMed.concentrationUnit}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-center text-xs text-gray-400 leading-relaxed">
+                        Total drug: {selectedRate} {selectedMed.rateUnit} &times; {weightKg} kg &times; {formatDuration(durationHrs)}
+                        {rateUnit !== "mg/kg/hr" && " (converted to mg/kg/hr)"}
+                        {" = "}
+                        <strong className="text-[#1a2332]">{totalDrugMg.toFixed(2)} mg</strong>
+                        <br />
+                        Volume: {totalDrugMg.toFixed(2)} mg &divide; {selectedMed.concentration} {selectedMed.concentrationUnit}
+                        {" = "}
+                        <strong className="text-[#1a2332]">{drugToAddMl.toFixed(2)} ml</strong>
                       </div>
                     </div>
-                    <div>
-                      <div className="text-xs text-gray-500">Weight</div>
-                      <div className="text-sm font-semibold text-[#1a2332]">
-                        {weightKg} <span className="text-xs text-gray-400">kg</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-500">Duration</div>
-                      <div className="text-sm font-semibold text-[#1a2332]">
-                        {durationHrs} <span className="text-xs text-gray-400">hrs</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-500">Conc.</div>
-                      <div className="text-sm font-semibold text-[#1a2332]">
-                        {selectedMed.concentration} <span className="text-xs text-gray-400">{selectedMed.concentrationUnit}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-center text-xs text-gray-400 leading-relaxed">
-                    Total drug: {selectedRate} {selectedMed.rateUnit} &times; {weightKg} kg &times; {durationHrs} hrs
-                    {rateUnit !== "mg/kg/hr" && " (converted to mg/kg/hr)"}
-                    {" = "}
-                    <strong className="text-[#1a2332]">{totalDrugMg.toFixed(2)} mg</strong>
-                    <br />
-                    Volume: {totalDrugMg.toFixed(2)} mg &divide; {selectedMed.concentration} {selectedMed.concentrationUnit}
-                    {" = "}
-                    <strong className="text-[#1a2332]">{drugToAddMl.toFixed(2)} ml</strong>
-                  </div>
-                </div>
 
-                {/* CRI Results */}
-                <div className="space-y-2 mt-3">
-                  <div className="bg-[#c8a45a] rounded-xl px-4 py-4 text-center sm:px-6 sm:py-5">
-                    <div className="text-xs font-semibold text-white/70 uppercase tracking-widest mb-1">
-                      Add to {bagVolume} ml {diluent}
-                    </div>
-                    <div className="text-3xl font-black text-white sm:text-5xl">
-                      {drugToAddMl.toFixed(2)}{" "}
-                      <span className="text-xl font-bold sm:text-3xl">ml</span>
-                    </div>
-                    <div className="text-xs text-white/80 mt-1">
-                      of {selectedMed.name} ({selectedMed.concentration} {selectedMed.concentrationUnit})
-                    </div>
-                  </div>
-                  <div className="bg-[#1a2332] rounded-xl px-4 py-3 text-center sm:px-6 sm:py-4">
-                    <div className="text-xs font-semibold text-[#c8a45a] uppercase tracking-widest mb-1">
-                      Run at
-                    </div>
-                    <div className="text-2xl font-black text-white sm:text-4xl">
-                      {dripRateMlHr.toFixed(1)}{" "}
-                      <span className="text-lg font-bold sm:text-2xl">ml/hr</span>
-                    </div>
-                    <div className="text-xs text-gray-400 mt-1">
-                      for {durationHrs} hours | Total: {totalDrugMg.toFixed(2)} mg
-                    </div>
-                    {rateUnit !== "mg/kg/hr" && (
-                      <div className="text-xs text-gray-500 mt-0.5">
-                        ({rate} {rateUnit} = {rateInMgKgHr.toFixed(4)} mg/kg/hr)
+                    {/* CRI Results */}
+                    <div className="space-y-2 mt-3">
+                      <div className="bg-[#c8a45a] rounded-xl px-4 py-4 text-center sm:px-6 sm:py-5">
+                        <div className="text-xs font-semibold text-white/70 uppercase tracking-widest mb-1">
+                          Add to {bagVolume} ml {diluent}
+                        </div>
+                        <div className="text-3xl font-black text-white sm:text-5xl">
+                          {drugToAddMl.toFixed(2)}{" "}
+                          <span className="text-xl font-bold sm:text-3xl">ml</span>
+                        </div>
+                        <div className="text-xs text-white/80 mt-1">
+                          of {selectedMed.name} ({selectedMed.concentration} {selectedMed.concentrationUnit})
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </div>
+                      <div className="bg-[#1a2332] rounded-xl px-4 py-3 text-center sm:px-6 sm:py-4">
+                        <div className="text-xs font-semibold text-[#c8a45a] uppercase tracking-widest mb-1">
+                          Run at
+                        </div>
+                        <div className="text-2xl font-black text-white sm:text-4xl">
+                          {outputRate.value < 1 ? outputRate.value.toFixed(2) : outputRate.value.toFixed(1)}{" "}
+                          <span className="text-lg font-bold sm:text-2xl">{outputRate.label}</span>
+                        </div>
+                        <div className="flex justify-center gap-1.5 mt-2">
+                          {OUTPUT_UNITS.map((u) => (
+                            <button
+                              key={u}
+                              type="button"
+                              onClick={() => setOutputUnit(u)}
+                              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                                outputUnit === u
+                                  ? "bg-[#c8a45a] text-white"
+                                  : "bg-white/10 text-gray-400 hover:bg-white/20"
+                              }`}
+                            >
+                              {u}
+                            </button>
+                          ))}
+                        </div>
+                        {outputUnit === "drops/min" && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            ({DROPS_PER_ML} drops/ml macrodrip set)
+                          </div>
+                        )}
+                        <div className="text-xs text-gray-400 mt-1">
+                          for {formatDuration(durationHrs)} | Total: {totalDrugMg.toFixed(2)} mg
+                        </div>
+                        {rateUnit !== "mg/kg/hr" && (
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            ({rate} {rateUnit} = {rateInMgKgHr.toFixed(4)} mg/kg/hr)
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
